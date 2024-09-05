@@ -15,6 +15,8 @@ Log.Logger = new LoggerConfiguration()
 // Tell our app to use Serilog for logging
 builder.Host.UseSerilog();
 
+Log.Information("Starting up the Weather Service API");
+
 // Register services for dependency injection
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
@@ -24,12 +26,16 @@ builder.Services.Configure<WeatherDatabaseSettings>(builder.Configuration.GetSec
 builder.Services.AddScoped<IWeatherService, WeatherService.Services.WeatherService>();
 builder.Services.AddScoped<IGeocodingService, GeocodingService>();
 
+Log.Information("Configured services and dependency injection");
+
 // Set up Swagger for API documentation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Weather Service API", Version = "v1" });
 });
+
+Log.Information("Configured Swagger for API documentation");
 
 var app = builder.Build();
 
@@ -38,6 +44,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    Log.Information("Development environment detected. Swagger UI enabled.");
+}
+else
+{
+    Log.Information("Production environment detected. Swagger UI disabled.");
 }
 
 // Force HTTPS
@@ -48,5 +59,20 @@ app.MapControllers();
 // Log all HTTP requests
 app.UseSerilogRequestLogging();
 
+Log.Information("Weather Service API is configured and ready to start");
+
 // Fire up the app
-app.Run();
+try
+{
+    Log.Information("Starting Weather Service API");
+    app.Run();
+    Log.Information("Weather Service API stopped cleanly");
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Weather Service API terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
